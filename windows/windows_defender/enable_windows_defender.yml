@@ -1,0 +1,23 @@
+---
+- name: Enforce and Enable Windows Defender Antivirus
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Ensure Windows Defender Antivirus is installed
+      win_feature:
+        name: Windows-Defender-Features
+        state: present
+
+    - name: Enable Real-Time Protection
+      win_defender:
+        realtime_protection: enabled
+
+    - name: Schedule Automatic Scans
+      win_defender_scan:
+        scan_type: full
+        schedule:
+          frequency: daily
+          start_time: "02:00"
+

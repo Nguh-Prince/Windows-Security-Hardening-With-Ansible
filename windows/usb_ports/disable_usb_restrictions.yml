@@ -1,0 +1,27 @@
+---
+- name: Deactivate USB Port Restrictions
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Enable USB Storage via Registry
+      win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Services\UsbStor
+        name: "Start"
+        data: 3
+        type: dword
+        state: present
+
+    - name: Remove Removable Media Access Restrictions
+      win_regedit: 
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\RemovableStorageDevices
+        name: "Deny_All"
+        state: absent
+
+    - name: Disable Auditing for USB Port Access Attempts
+      win_shell: |
+        auditpol /set /subcategory:"Removable Storage" /success:disable /failure:disable
+      args:
+        executable: PowerShell
+

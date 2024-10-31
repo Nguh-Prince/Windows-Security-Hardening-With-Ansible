@@ -1,0 +1,28 @@
+---
+- name: Check Software Restriction Policies (AppLocker) Status
+  hosts: all
+  become: yes
+  become_method: runas
+  become_method: SYSTEM
+  tasks:
+    - name: Check if AppLocker Feature is Installed
+      win_feature_facts:
+
+    - name: Display AppLocker Installation Status
+      debug:
+        msg: "AppLocker is ENABLED."
+      when: "'AppLocker' in ansible_facts.win_feature_names"
+
+    - name: Display AppLocker Installation Status
+      debug:
+        msg: "AppLocker is DISABLED."
+      when: "'AppLocker' not in ansible_facts.win_feature_names"
+
+    - name: Get AppLocker Rules
+      win_applocker_rule_info:
+      register: applocker_rules
+
+    - name: Display AppLocker Rules
+      debug:
+        msg: "AppLocker Rules: {{ applocker_rules }}"
+

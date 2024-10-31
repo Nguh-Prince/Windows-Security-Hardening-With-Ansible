@@ -1,0 +1,27 @@
+---
+- name: Deactivate Audit Logging and Event Monitoring
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Disable Audit Policy - Logon Events
+      win_audit_policy:
+        category: "Logon/Logoff"
+        subcategory: "Logon"
+        audit_success: no
+        audit_failure: no
+
+    - name: Disable Audit Policy - Object Access
+      win_audit_policy:
+        category: "Object Access"
+        subcategory: "File System"
+        audit_success: no
+        audit_failure: no
+
+    - name: Remove Event Forwarding Configuration
+      win_eventlog:
+        log_name: "Security"
+        event_id: 4624, 4625, 4670
+        state: absent
+

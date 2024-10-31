@@ -1,0 +1,29 @@
+---
+- name: Check Unnecessary Services Status
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  vars:
+    services_to_check:
+      - Telnet
+      - SMBv1
+      - RemoteRegistry
+      - Fax
+      - XblGameSave
+      - WMPNetworkSvc
+
+  tasks:
+    - name: Get Service Status
+      win_service_facts:
+
+    - name: Display Services Status
+      debug:
+        msg: |
+          Service: {{ item }}
+          State: {{ services[item].state }}
+          Start Mode: {{ services[item].start_mode }}
+      loop: "{{ services_to_check }}"
+      vars:
+        services: "{{ ansible_facts.services }}"
+

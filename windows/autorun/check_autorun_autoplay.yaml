@@ -1,0 +1,44 @@
+- name: Check AutoRun and AutoPlay Status
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Check AutoRun Status
+      win_shell: |
+        reg query "HKLM\Software\Policies\Microsoft\Windows\System" /v "DisableAutoRun"
+      register: autorun_status
+
+    - name: Check AutoPlay Status
+      win_shell: |
+        reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "NoDriveTypeAutoRun"
+      register: autoplay_status
+
+    - name: Display AutoRun Status for Debugging
+      debug:
+        var: autorun_status
+
+    - name: Display AutoPlay Status for Debugging
+      debug:
+        var: autoplay_status
+
+    - name: Determine if AutoRun is Enabled
+      debug:
+        msg: "AutoRun is ENABLED."
+      when: '"0x0" in autorun_status.stdout'
+
+    - name: Determine if AutoRun is Disabled
+      debug:
+        msg: "AutoRun is DISABLED."
+      when: '"0x1" in autorun_status.stdout'
+
+    - name: Determine if AutoPlay is Enabled
+      debug:
+        msg: "AutoPlay is ENABLED."
+      when: '"0x91" not in autoplay_status.stdout and "0xff" not in autoplay_status.stdout'
+
+    - name: Determine if AutoPlay is Disabled
+      debug:
+        msg: "AutoPlay is DISABLED."
+      when: '"0x91" in autoplay_status.stdout or "0xff" in autoplay_status.stdout'
+

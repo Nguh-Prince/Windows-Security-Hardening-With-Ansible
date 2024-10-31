@@ -1,0 +1,14 @@
+---
+- name: Enable USB storage
+  hosts: windows
+  tasks:
+    - name: Enable USB storage by modifying registry
+      win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Services\USBSTOR
+        name: Start
+        data: 3
+        type: dword
+      become: true
+      become_method: runas
+      become_user: SYSTEM
+

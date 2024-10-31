@@ -1,0 +1,8 @@
+usb_ports
+	disable_usb_restrictions.yml
+	enable_usb_restrictions.yml
+	check_usb_restrictions.yml
+autorun
+	disable_autorun_autoplay.yml
+	enable_autorun_autoplay.yml
+	check_autorun_autoplay.yml

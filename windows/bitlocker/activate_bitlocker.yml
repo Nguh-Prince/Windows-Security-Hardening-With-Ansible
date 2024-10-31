@@ -1,0 +1,29 @@
+---
+- name: Enforce and Enable BitLocker Drive Encryption
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Install BitLocker Feature
+      win_feature:
+        name: BitLocker
+        state: present
+
+    - name: Enable BitLocker on C: Drive
+      win_bitlocker:
+        path: "C:"
+        state: enabled
+        encryption_method: XtsAes256
+        protectors:
+          - tpm
+          - pin
+        pin: "1llstayf0ral0n9"
+
+    - name: Backup BitLocker Recovery Keys to Active Directory
+      win_shell: |
+        $SecureString = ConvertTo-SecureString "1llstayf0ral0n9" -AsPlainText -Force
+        Enable-BitLocker -MountPoint "C:" -EncryptionMethod XtsAes256 -PasswordProtector -Password $SecureString -RecoveryKeyPath "\\ADBackup\BitLockerKeys"
+      args:
+        executable: PowerShell
+

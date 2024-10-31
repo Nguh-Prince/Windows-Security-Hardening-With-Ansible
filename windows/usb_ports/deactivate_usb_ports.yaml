@@ -1,0 +1,14 @@
+---
+- name: Disable USB storage
+  hosts: windows
+  tasks:
+    - name: Disable USB storage by modifying registry
+      win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Services\USBSTOR
+        name: Start
+        data: 4
+        type: dword
+      become: true
+      become_method: runas
+      become_user: SYSTEM
+

@@ -1,0 +1,23 @@
+---
+- name: Check Windows Firewall Status
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Check if Windows Firewall is enabled for all profiles
+      win_firewall_rule:
+        name: "Enable Windows Firewall"
+        state: present
+      register: firewall_status
+
+    - name: Display Firewall Status
+      debug:
+        msg: "Windows Firewall is enabled."
+      when: firewall_status.changed == False
+
+    - name: Display Firewall Status
+      debug:
+        msg: "Windows Firewall is NOT enabled."
+      when: firewall_status.changed == True
+

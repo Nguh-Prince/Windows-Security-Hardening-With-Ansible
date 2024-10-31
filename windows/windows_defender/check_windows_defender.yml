@@ -1,0 +1,38 @@
+---
+- name: Check Windows Defender Antivirus Status
+  hosts: bank_computers
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Check Real-Time Protection Status
+      win_defender:
+        state: present
+      register: defender_status
+
+    - name: Display Defender Status
+      debug:
+        msg: "Windows Defender Real-Time Protection is ENABLED."
+      when: defender_status.realtime_protection == "enabled"
+
+    - name: Display Defender Status
+      debug:
+        msg: "Windows Defender Real-Time Protection is DISABLED."
+      when: defender_status.realtime_protection != "enabled"
+
+    - name: Check Scheduled Scans
+      win_defender_scan:
+        scan_type: full
+        state: present
+      register: scan_status
+
+    - name: Display Scheduled Scan Status
+      debug:
+        msg: "Scheduled Scans are ENABLED."
+      when: scan_status.state == "present"
+
+    - name: Display Scheduled Scan Status
+      debug:
+        msg: "Scheduled Scans are DISABLED."
+      when: scan_status.state != "present"
+

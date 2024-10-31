@@ -1,0 +1,24 @@
+---
+- name: Enforce Software Restriction Policies (AppLocker)
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Enable AppLocker Feature
+      win_feature:
+        name: "AppLocker"
+        state: present
+
+    - name: Create Executable Rules for AppLocker
+      win_applocker_rule:
+        path: "C:\Program Files\TrustedApp\*.exe"
+        action: allow
+        rule_type: "Exe"
+
+    - name: Create Deny All Executable Rule
+      win_applocker_rule:
+        path: "*"
+        action: deny
+        rule_type: "Exe"
+

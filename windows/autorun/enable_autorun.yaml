@@ -1,0 +1,14 @@
+---
+- name: Enable Autorun in Windows
+  hosts: windows
+  tasks:
+    - name: Enable Autorun via registry
+      win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+        name: NoDriveTypeAutoRun
+        data: 0
+        type: dword
+      become: true
+      become_method: runas
+      become_user: SYSTEM
+

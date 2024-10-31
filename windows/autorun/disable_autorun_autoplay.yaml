@@ -1,0 +1,18 @@
+- name: Disable AutoRun and AutoPlay Features
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Disable AutoRun via Registry
+      win_shell: |
+        reg add "HKLM\Software\Policies\Microsoft\Windows\System" /v "DisableAutoRun" /t REG_DWORD /d 1 /f
+
+    - name: Disable AutoPlay via Registry
+      win_shell: |
+        reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "NoDriveTypeAutoRun" /t REG_DWORD /d 255 /f
+
+    - name: Enable Auditing for AutoRun/AutoPlay Attempts
+      win_shell: |
+        auditpol /set /subcategory:"Other System Events" /success:enable /failure:enable
+

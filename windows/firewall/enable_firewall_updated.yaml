@@ -1,0 +1,30 @@
+---
+- name: Enforce and Enable Windows Firewall
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Enable Windows Firewall for Domain, Private, and Public profiles
+      community.windows.win_firewall_rule:
+        name: "Enable Windows Firewall"
+        enable: yes
+        direction: in
+        action: allow
+        profile: Domain,Private,Public
+        state: enabled
+
+    - name: Configure Firewall Logging
+      win_firewall_policy:
+        state: present
+        log_allowed: true
+        log_blocked: true
+        log_file: "%systemroot%\\system32\\logfiles\\firewall\\pfirewall.log"
+        log_max_size_kb: 4096
+
+    - name: Ensure Windows Firewall service is running
+      win_service:
+        name: "MpsSvc"
+        start_mode: auto
+        state: started
+

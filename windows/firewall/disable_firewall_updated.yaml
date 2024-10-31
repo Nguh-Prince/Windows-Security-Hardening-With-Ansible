@@ -1,0 +1,23 @@
+---
+- name: Deactivate Windows Firewall
+  hosts: all
+  become: yes
+  become_method: runas
+  tasks:
+    - name: Disable Windows Firewall for Domain, Private, and Public profiles
+      win_firewall_rule:
+        name: "Enable Windows Firewall"
+        enable: no
+        state: disabled
+
+    - name: Disable Firewall Logging
+      win_firewall_policy:
+        state: present
+        log_allowed: false
+        log_blocked: false
+
+    - name: Stop Windows Firewall service
+      win_service:
+        name: "MpsSvc"
+        state: stopped
+

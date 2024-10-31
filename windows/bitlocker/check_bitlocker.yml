@@ -1,0 +1,24 @@
+---
+- name: Check BitLocker Drive Encryption Status
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Get BitLocker Status
+      win_shell: |
+        Get-BitLockerVolume -MountPoint "C:" | Select-Object -ExpandProperty ProtectionStatus
+      register: bitlocker_status
+      args:
+        executable: PowerShell
+
+    - name: Display BitLocker Status
+      debug:
+        msg: "BitLocker is ENABLED."
+      when: bitlocker_status.stdout.strip() == "1"
+
+    - name: Display BitLocker Status
+      debug:
+        msg: "BitLocker is DISABLED."
+      when: bitlocker_status.stdout.strip() != "1"
+

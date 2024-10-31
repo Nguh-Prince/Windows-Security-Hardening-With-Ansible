@@ -1,0 +1,17 @@
+---
+- name: Deactivate Software Restriction Policies (AppLocker)
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Remove AppLocker Rules
+      win_applocker_rule:
+        path: "*"
+        state: absent
+
+    - name: Disable AppLocker Feature
+      win_feature:
+        name: "AppLocker"
+        state: absent
+

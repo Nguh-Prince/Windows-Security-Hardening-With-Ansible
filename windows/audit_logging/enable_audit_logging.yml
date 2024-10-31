@@ -1,0 +1,28 @@
+---
+- name: Enforce Audit Logging and Event Monitoring
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Enable Audit Policy - Logon Events
+      win_audit_policy:
+        category: "Logon/Logoff"
+        subcategory: "Logon"
+        audit_success: yes
+        audit_failure: yes
+
+    - name: Enable Audit Policy - Object Access
+      win_audit_policy:
+        category: "Object Access"
+        subcategory: "File System"
+        audit_success: yes
+        audit_failure: yes
+
+    - name: Configure Event Forwarding to SIEM
+      win_eventlog:
+        log_name: "Security"
+        event_id: 4624, 4625, 4670
+        state: present
+        path: "\\SIEMServer\ForwardedEvents"
+

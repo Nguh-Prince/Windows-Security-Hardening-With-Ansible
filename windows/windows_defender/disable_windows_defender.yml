@@ -1,0 +1,21 @@
+---
+- name: Deactivate Windows Defender Antivirus
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Disable Real-Time Protection
+      win_defender:
+        realtime_protection: disabled
+
+    - name: Disable Scheduled Scans
+      win_defender_scan:
+        scan_type: full
+        state: absent
+
+    - name: Uninstall Windows Defender Antivirus
+      win_feature:
+        name: Windows-Defender-Features
+        state: absent
+

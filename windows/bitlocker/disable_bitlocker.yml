@@ -1,0 +1,26 @@
+---
+- name: Deactivate BitLocker Drive Encryption
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Suspend BitLocker Protection
+      win_bitlocker:
+        path: "C:"
+        state: suspended
+
+    - name: Disable BitLocker on C: Drive
+      win_bitlocker:
+        path: "C:"
+        state: disabled
+
+    - name: Remove BitLocker Recovery Keys from Active Directory
+      win_shell: |
+        # PowerShell commands to remove recovery keys from AD
+        # Note: Requires appropriate permissions and scripts
+        # Placeholder for actual implementation
+        Write-Output "Recovery keys removal not implemented."
+      args:
+        executable: PowerShell
+

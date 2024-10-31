@@ -1,0 +1,8 @@
+---
+- name: Enable Windows Firewall
+  hosts: all
+  tasks:
+    - name: Enable all firewalls on Windows
+      win_shell: |
+        Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+

@@ -1,0 +1,38 @@
+---
+- name: Disable Unnecessary Services and Features
+  hosts: all
+  become: yes
+  become_method: runas
+  vars:
+    services_to_disable:
+      - Telnet
+      - SMBv1
+      - RemoteRegistry
+      - Fax
+      - XblGameSave
+      - WMPNetworkSvc
+
+  tasks:
+    - name: Disable specified services
+      win_service:
+        name: "{{ item }}"
+        state: stopped
+        start_mode: disabled
+      loop: "{{ services_to_disable }}"
+
+    - name: Remove Unused Software and Applications
+      win_package:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "Adobe Reader"
+        - "Java Runtime Environment"
+        - "QuickTime"
+
+    - name: Ensure Services are Disabled
+      win_service:
+        name: "{{ item }}"
+        state: stopped
+        start_mode: disabled
+      loop: "{{ services_to_disable }}"
+

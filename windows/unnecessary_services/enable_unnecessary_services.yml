@@ -1,0 +1,28 @@
+---
+- name: Enable Necessary Services
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  vars:
+    services_to_enable:
+      - "RemoteRegistry"
+      - "Fax"
+
+  tasks:
+    - name: Enable specified services
+      win_service:
+        name: "{{ item }}"
+        state: started
+        start_mode: automatic
+      loop: "{{ services_to_enable }}"
+
+    - name: Install Unused Software and Applications
+      win_package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - "Adobe Reader"
+        - "Java Runtime Environment"
+        - "QuickTime"
+

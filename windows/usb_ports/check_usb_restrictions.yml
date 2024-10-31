@@ -1,0 +1,24 @@
+- name: Check USB Port Restrictions Status
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Query USB Storage Registry Setting
+      win_shell: 'reg query HKLM\SYSTEM\CurrentControlSet\Services\UsbStor /v Start'
+      register: usb_start
+
+    - name: Display usb_start content
+      debug:
+        var: usb_start
+
+    - name: Display USB Port Status (Disabled)
+      debug:
+        msg: "USB Storage is DISABLED."
+      when: '"0x4" in usb_start.stdout'
+
+    - name: Display USB Port Status (Enabled)
+      debug:
+        msg: "USB Storage is ENABLED."
+      when: '"0x4" not in usb_start.stdout'
+
