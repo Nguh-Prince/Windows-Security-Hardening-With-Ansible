@@ -1,0 +1,18 @@
+---
+- name: Disable secure logging - allow all users access to log files
+  hosts: all
+  tasks:
+
+    - name: Add read/write permissions for all users on log files
+      win_acl:
+        path: "C:\\path\\to\\logs"
+        user: "Users"
+        rights: "Read, Write"
+        type: "allow"
+        state: present  # Grant read/write permissions for non-admin users
+
+    - name: Verify ACL changes applied
+      win_acl_inheritance:
+        path: "C:\\path\\to\\logs"
+        state: present
+

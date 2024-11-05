@@ -1,0 +1,44 @@
+---
+- name: Check if WiFi card is enabled or disabled
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  vars:
+    wifi_adapter_found: false
+    wifi_status: "Unknown"
+  tasks:
+
+    - name: Get WiFi adapter name
+      win_shell: |
+        Get-NetAdapter -InterfaceDescription "*Wi-Fi*" | Select-Object -ExpandProperty Name
+      register: wifi_adapter_name
+
+    - name: Set fact if WiFi adapter is found
+      set_fact:
+        wifi_adapter_found: "{{ wifi_adapter_name.stdout != '' }}"
+
+    - name: Check WiFi card status
+      win_shell: |
+        Get-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" | Select-Object -ExpandProperty Status
+      register: adapter_status
+      when: wifi_adapter_found
+
+    - name: Set WiFi card status fact
+      set_fact:
+        wifi_status: "{{ adapter_status.stdout }}"
+      when: wifi_adapter_found
+
+    - name: Debug WiFi card status
+      debug:
+        msg: > 
+          WiFi adapter found: {{ wifi_adapter_found }} 
+          Status: {{ wifi_status }}
+          {% if wifi_adapter_found and wifi_status == "Up" %}
+          WiFi is enabled.
+          {% elif wifi_adapter_found and wifi_status == "Disabled" %}
+          WiFi is disabled.
+          {% else %}
+          WiFi adapter not found or status unknown.
+          {% endif %}
+

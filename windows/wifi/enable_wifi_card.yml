@@ -1,0 +1,29 @@
+---
+- name: Enable WiFi card
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+
+    - name: Get WiFi adapter name
+      win_shell: |
+        Get-NetAdapter -InterfaceDescription "*Wi-Fi*" | Select-Object -ExpandProperty Name
+      register: wifi_adapter_name
+
+    - name: Enable WiFi card
+      win_shell: |
+        Enable-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" -Confirm:$false
+      when: wifi_adapter_name.stdout != ""
+      register: enable_wifi_result
+
+    - name: Confirm WiFi card is enabled
+      win_shell: |
+        Get-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" | Select-Object -ExpandProperty Status
+      register: wifi_status
+      when: wifi_adapter_name.stdout != ""
+
+    - name: Debug WiFi enable status
+      debug:
+        msg: "WiFi status after enable attempt: {{ wifi_status.stdout }}"
+

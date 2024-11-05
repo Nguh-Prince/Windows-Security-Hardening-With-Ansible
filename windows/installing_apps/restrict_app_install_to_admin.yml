@@ -1,0 +1,50 @@
+---
+- name: Restrict application installations to administrators only
+  hosts: windows_clients
+  tasks:
+
+    - name: Disable Microsoft Store
+      win_policy:
+        name: "Turn off the Store application"
+        section: machine
+        policy_template: "appxpolicy.admx"
+        option: "Enabled"
+
+    - name: Prevent users from running applications from AppData\Local (for portable apps)
+      win_regedit:
+        path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"
+        name: "DisallowRun"
+        value: 1
+        type: dword
+
+    - name: Define restricted paths for non-admin users
+      win_regedit:
+        path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\DisallowRun"
+        name: "1"
+        value: "%USERPROFILE%\\AppData\\Local"
+        type: string
+
+    - name: Block software installations for non-admin users using Software Restriction Policies
+      win_regedit:
+        path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers"
+        name: "DefaultLevel"
+        value: 0x40000
+        type: dword
+
+    - name: Create additional rule to restrict AppData\Local for all users
+      win_regedit:
+        path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\0\\Paths"
+        name: "AppDataLocal"
+        value: "%USERPROFILE%\\AppData\\Local"
+        type: string
+
+    - name: Disable installation for portable executables by blocking common folders
+      win_regedit:
+        path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\0\\Paths"
+        name: "PortableApps"
+        value: "%USERPROFILE%\\Downloads\\"
+        type: string
+
+    - name: Apply the Software Restriction Policy immediately
+      win_shell: gpupdate /force
+

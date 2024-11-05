@@ -1,0 +1,48 @@
+---
+- name: Check secure logging configuration
+  hosts: windows_clients
+  vars:
+    users_have_access: false
+    admins_have_full_control: false
+  tasks:
+
+    - name: Check if 'Users' group has access to log files
+      win_acl:
+        path: "C:\\path\\to\\logs"
+        user: "Users"
+      register: users_acl
+
+    - name: Determine if Users have read/write access
+      set_fact:
+        users_have_access: "{{ 'Read' in users_acl.rights and 'Write' in users_acl.rights }}"
+
+    - name: Check if 'Administrators' group has full control of log files
+      win_acl:
+        path: "C:\\path\\to\\logs"
+        user: "Administrators"
+      register: admins_acl
+
+    - name: Determine if Administrators have full control
+      set_fact:
+        admins_have_full_control: "{{ 'FullControl' in admins_acl.rights }}"
+
+    - name: Debug output for Users access
+      debug:
+        msg: "Non-admin users (Users group) have read/write access: {{ users_have_access }}"
+
+    - name: Debug output for Administrators access
+      debug:
+        msg: "Administrators have full control access: {{ admins_have_full_control }}"
+
+    - name: Overall secure logging status
+      debug:
+        msg: > 
+          Secure Logging Status:
+          {% if not users_have_access and admins_have_full_control %}
+          Secure logging is enabled - only admins have access.
+          {% elif users_have_access %}
+          Non-admin users have access - secure logging is not enabled.
+          {% else %}
+          Unable to determine precise access control settings.
+          {% endif %}
+

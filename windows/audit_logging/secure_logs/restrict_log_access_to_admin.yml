@@ -1,0 +1,26 @@
+---
+- name: Secure logging - restrict access to admin users only
+  hosts: windows_clients
+  tasks:
+    
+    - name: Restrict access to log files for non-admin users
+      win_acl:
+        path: "C:\\path\\to\\logs"
+        user: "Users"
+        rights: "Read, Write"
+        type: "allow"
+        state: absent  # Remove read/write permissions for non-admin users
+
+    - name: Ensure Administrators have full access to logs
+      win_acl:
+        path: "C:\\path\\to\\logs"
+        user: "Administrators"
+        rights: "FullControl"
+        type: "allow"
+        state: present  # Add full access permissions for admin users
+
+    - name: Verify ACL changes applied
+      win_acl_inheritance:
+        path: "C:\\path\\to\\logs"
+        state: present
+

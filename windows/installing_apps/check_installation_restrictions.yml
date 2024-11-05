@@ -1,0 +1,59 @@
+---
+- name: Check if installation restrictions are enabled
+  hosts: windows_clients
+  vars:
+    microsoft_store_disabled: false
+    disallow_run_enabled: false
+    software_restriction_policy_level: ""
+  tasks:
+    
+    - name: Check Microsoft Store status
+      win_policy:
+        name: "Turn off the Store application"
+        section: machine
+      register: store_status
+    - set_fact:
+        microsoft_store_disabled: "{{ store_status.policy_value == 'Enabled' }}"
+
+    - name: Debug Microsoft Store restriction
+      debug:
+        msg: "Microsoft Store Disabled: {{ microsoft_store_disabled }}"
+
+    - name: Check if DisallowRun policy is set
+      win_regedit:
+        path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"
+        name: "DisallowRun"
+        type: dword
+      register: disallow_run_status
+    - set_fact:
+        disallow_run_enabled: "{{ disallow_run_status.value == 1 }}"
+
+    - name: Debug DisallowRun status
+      debug:
+        msg: "DisallowRun Enabled: {{ disallow_run_enabled }}"
+
+    - name: Check Software Restriction Policy level
+      win_regedit:
+        path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers"
+        name: "DefaultLevel"
+        type: dword
+      register: restriction_policy_status
+    - set_fact:
+        software_restriction_policy_level: "{{ restriction_policy_status.value }}"
+
+    - name: Debug Software Restriction Policy level
+      debug:
+        msg: "Software Restriction Policy Level: {{ software_restriction_policy_level }}"
+
+    - name: Interpret restriction policy level
+      debug:
+        msg: > 
+          Restriction Policy Status:
+          {% if software_restriction_policy_level == 0x0 %}
+          Unrestricted (No Restrictions)
+          {% elif software_restriction_policy_level == 0x40000 %}
+          Basic User (Restrictions Active)
+          {% else %}
+          Unknown Restriction Level
+          {% endif %}
+

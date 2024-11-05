@@ -1,0 +1,40 @@
+---
+- name: Allow all users to install applications
+  hosts: windows_clients
+  tasks:
+    
+    - name: Enable Microsoft Store
+      win_policy:
+        name: "Turn off the Store application"
+        section: machine
+        policy_template: "appxpolicy.admx"
+        option: "Disabled"
+
+    - name: Remove restrictions on running applications from AppData\Local
+      win_regedit:
+        path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"
+        name: "DisallowRun"
+        state: absent  # Remove the DisallowRun key if it exists
+
+    - name: Remove specific path restrictions set for non-admin users
+      win_regedit:
+        path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\0\\Paths"
+        name: "AppDataLocal"
+        state: absent  # Remove the AppDataLocal restriction key
+
+    - name: Remove restrictions for portable apps in Downloads
+      win_regedit:
+        path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\0\\Paths"
+        name: "PortableApps"
+        state: absent  # Remove the PortableApps restriction key
+
+    - name: Reset Software Restriction Policy to Unrestricted
+      win_regedit:
+        path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers"
+        name: "DefaultLevel"
+        value: 0x0
+        type: dword
+
+    - name: Apply changes immediately
+      win_shell: gpupdate /force
+

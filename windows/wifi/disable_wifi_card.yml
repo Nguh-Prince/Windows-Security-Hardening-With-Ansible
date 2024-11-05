@@ -1,0 +1,29 @@
+---
+- name: Disable WiFi card
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+
+    - name: Get WiFi adapter name
+      win_shell: |
+        Get-NetAdapter -InterfaceDescription "*Wi-Fi*" | Select-Object -ExpandProperty Name
+      register: wifi_adapter_name
+
+    - name: Disable WiFi card
+      win_shell: |
+        Disable-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" -Confirm:$false
+      when: wifi_adapter_name.stdout != ""
+      register: disable_wifi_result
+
+    - name: Confirm WiFi card is disabled
+      win_shell: |
+        Get-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" | Select-Object -ExpandProperty Status
+      register: wifi_status
+      when: wifi_adapter_name.stdout != ""
+
+    - name: Debug WiFi disable status
+      debug:
+        msg: "WiFi status after disable attempt: {{ wifi_status.stdout }}"
+
