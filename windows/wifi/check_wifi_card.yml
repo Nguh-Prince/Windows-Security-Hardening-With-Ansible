@@ -1,44 +1,31 @@
 ---
-- name: Check if WiFi card is enabled or disabled
+- name: Check WiFi card status
   hosts: all
   become: yes
   become_method: runas
   become_user: SYSTEM
-  vars:
-    wifi_adapter_found: false
-    wifi_status: "Unknown"
   tasks:
-
-    - name: Get WiFi adapter name
+    - name: Get WiFi adapter name using Get-WmiObject
       win_shell: |
-        Get-NetAdapter -InterfaceDescription "*Wi-Fi*" | Select-Object -ExpandProperty Name
+        Get-WmiObject Win32_NetworkAdapter | Where-Object { $_.NetConnectionID -like "*Wi-Fi*" } | Select-Object -ExpandProperty NetConnectionID
       register: wifi_adapter_name
+      changed_when: false
 
-    - name: Set fact if WiFi adapter is found
+    - name: Extract WiFi adapter_name
       set_fact:
-        wifi_adapter_found: "{{ wifi_adapter_name.stdout != '' }}"
+        wifi_adapter_cleaned: "{{ wifi_adapter_name.stdout.splitlines()[0] | trim }}"
+
+    - name: Display WiFi adapter output for debugging
+      debug:
+        msg: "Cleaned Adapter Name: {{ wifi_adapter_cleaned }}"
 
     - name: Check WiFi card status
       win_shell: |
-        Get-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" | Select-Object -ExpandProperty Status
-      register: adapter_status
-      when: wifi_adapter_found
+        Get-NetAdapter -Name "{{ wifi_adapter_cleaned }}" | Select-Object -ExpandProperty Status
+      register: wifi_status
+      when: wifi_adapter_name.stdout != ""
 
-    - name: Set WiFi card status fact
-      set_fact:
-        wifi_status: "{{ adapter_status.stdout }}"
-      when: wifi_adapter_found
-
-    - name: Debug WiFi card status
+    - name: Display WiFi status
       debug:
-        msg: > 
-          WiFi adapter found: {{ wifi_adapter_found }} 
-          Status: {{ wifi_status }}
-          {% if wifi_adapter_found and wifi_status == "Up" %}
-          WiFi is enabled.
-          {% elif wifi_adapter_found and wifi_status == "Disabled" %}
-          WiFi is disabled.
-          {% else %}
-          WiFi adapter not found or status unknown.
-          {% endif %}
+        msg: "WiFi adapter status: {{ wifi_status.stdout if wifi_adapter_name.stdout != '' else 'No WiFi adapter found' }}"
 

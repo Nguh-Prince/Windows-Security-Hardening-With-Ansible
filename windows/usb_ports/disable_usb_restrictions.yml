@@ -19,9 +19,17 @@
         name: "Deny_All"
         state: absent
 
+    - name: Detect system language
+      win_shell: | 
+        [System.Globalization.CultureInfo]::InstalledUICulture.Name
+      register: lang
+
+    - name: Set audit category based on system language
+      set_fact:
+        audit_category: "{{ 'Removable Storage' if lang.stdout.startswith('en') else 'Stockage amovible' }}"
+
     - name: Disable Auditing for USB Port Access Attempts
       win_shell: |
-        auditpol /set /subcategory:"Removable Storage" /success:disable /failure:disable
+        auditpol /set /subcategory:"{{ audit_category }}" /success:disable /failure:disable
       args:
         executable: PowerShell
-

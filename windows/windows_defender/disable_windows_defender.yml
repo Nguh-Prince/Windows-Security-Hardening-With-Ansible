@@ -1,21 +1,29 @@
 ---
-- name: Deactivate Windows Defender Antivirus
+- name: Disable Windows Defender and Remove Scheduled Daily Scan
   hosts: all
   become: yes
   become_method: runas
   become_user: SYSTEM
   tasks:
-    - name: Disable Real-Time Protection
-      win_defender:
-        realtime_protection: disabled
+    - name: Disable Windows Defender feature using DISM (for client editions)
+      win_shell: |
+        DISM /Online /Disable-Feature /FeatureName:Windows-Defender-ApplicationGuard /NoRestart
+      args:
+        executable: cmd
+      register: defender_dism_output
+      failed_when: "'Error' in defender_dism_output.stdout"
+      ignore_errors: yes
 
-    - name: Disable Scheduled Scans
-      win_defender_scan:
-        scan_type: full
-        state: absent
+    - name: Display DISM output for debugging
+      debug:
+        var: defender_dism_output
 
-    - name: Uninstall Windows Defender Antivirus
-      win_feature:
-        name: Windows-Defender-Features
-        state: absent
+    - name: Disable Windows Defender Real-Time Protection
+      win_shell: |
+        Set-MpPreference -DisableRealtimeMonitoring $true
+
+    - name: Remove the scheduled daily full scan task
+      win_shell: |
+        Unregister-ScheduledTask -TaskName "DailyWindowsDefenderScan" -Confirm:$false
+      ignore_errors: yes
 

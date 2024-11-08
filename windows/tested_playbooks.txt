@@ -6,3 +6,18 @@ autorun
 	disable_autorun_autoplay.yml
 	enable_autorun_autoplay.yml
 	check_autorun_autoplay.yml
+
+firewall
+	enable_firewall_updated.yml
+	disable_firewall_updated.yml
+	check_firewall.yml
+
+windows_defender
+	enable_windows_defender.yml
+	disable_windows_defender.yml
+	check_windows_defender.yml
+
+wifi
+	disable_wifi_card.yml
+	enable_wifi_card.yml
+	check_wifi_card.yml

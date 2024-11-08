@@ -1,23 +1,30 @@
 ---
-- name: Enforce and Enable Windows Defender Antivirus
+- name: Enable Windows Defender and Schedule a Daily Scan
   hosts: all
   become: yes
   become_method: runas
   become_user: SYSTEM
   tasks:
-    - name: Ensure Windows Defender Antivirus is installed
-      win_feature:
-        name: Windows-Defender-Features
-        state: present
+    - name: Enable Windows Defender feature using DISM (for client editions)
+      win_shell: |
+        DISM /Online /Enable-Feature /FeatureName:Windows-Defender-ApplicationGuard /All /NoRestart
+      args:
+        executable: cmd
+      register: defender_dism_output
+      failed_when: "'Error' in defender_dism_output.stdout"
+      ignore_errors: yes
 
-    - name: Enable Real-Time Protection
-      win_defender:
-        realtime_protection: enabled
+    - name: Display DISM output for debugging
+      debug:
+        var: defender_dism_output
 
-    - name: Schedule Automatic Scans
-      win_defender_scan:
-        scan_type: full
-        schedule:
-          frequency: daily
-          start_time: "02:00"
+    - name: Enable Windows Defender Real-Time Protection
+      win_shell: |
+        Set-MpPreference -DisableRealtimeMonitoring $false
 
+    - name: Schedule a Daily Full Scan for Windows Defender at 6 PM
+      win_shell: |
+        $trigger = New-ScheduledTaskTrigger -Daily -At 6pm
+        $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "Start-MpScan -ScanType FullScan"
+        $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount
+        Register-ScheduledTask -TaskName "DailyWindowsDefenderScan" -Trigger $trigger -Action $action -Principal $principal -Description "Daily full scan with Windows Defender" -Force

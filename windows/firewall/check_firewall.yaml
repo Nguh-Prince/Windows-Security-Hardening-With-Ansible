@@ -5,19 +5,22 @@
   become_method: runas
   become_user: SYSTEM
   tasks:
-    - name: Check if Windows Firewall is enabled for all profiles
-      win_firewall_rule:
-        name: "Enable Windows Firewall"
-        state: present
+    - name: Check if Windows Firewall is enabled for all profiles using PowerShell
+      win_shell: |
+        (Get-NetFirewallProfile -Profile Domain,Private,Public).Enabled
       register: firewall_status
 
-    - name: Display Firewall Status
+    - name: Print firewall_status for debugging
       debug:
-        msg: "Windows Firewall is enabled."
-      when: firewall_status.changed == False
+        var: firewall_status
 
-    - name: Display Firewall Status
+    - name: Display Firewall Status - Enabled
       debug:
-        msg: "Windows Firewall is NOT enabled."
-      when: firewall_status.changed == True
+        msg: "Windows Firewall is enabled for one or more profiles."
+      when: firewall_status.stdout.strip() != 'False False False'
+
+    - name: Display Firewall Status - Disabled
+      debug:
+        msg: "Windows Firewall is completely disabled for all profiles."
+      when: firewall_status.stdout.strip() == 'False False False'
 

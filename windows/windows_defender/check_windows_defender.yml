@@ -1,38 +1,47 @@
 ---
-- name: Check Windows Defender Antivirus Status
-  hosts: bank_computers
+- name: Check Windows Defender and Scheduled Full Scan Status
+  hosts: all
   become: yes
   become_method: runas
   become_user: SYSTEM
   tasks:
-    - name: Check Real-Time Protection Status
-      win_defender:
-        state: present
-      register: defender_status
+    - name: Check if Windows Defender feature is enabled
+      win_shell: |
+        DISM /Online /Get-FeatureInfo /FeatureName:Windows-Defender-ApplicationGuard
+      register: defender_dism_check
+      changed_when: false
 
-    - name: Display Defender Status
+    - name: Display DISM feature check output for debugging
       debug:
-        msg: "Windows Defender Real-Time Protection is ENABLED."
-      when: defender_status.realtime_protection == "enabled"
+        var: defender_dism_check.stdout_lines
 
-    - name: Display Defender Status
+    - name: Check if Windows Defender Real-Time Protection is enabled
+      win_shell: |
+        Get-MpPreference | Select-Object -ExpandProperty DisableRealtimeMonitoring
+      register: defender_realtime_status
+      changed_when: false
+
+    - name: Display real-time protection status
       debug:
-        msg: "Windows Defender Real-Time Protection is DISABLED."
-      when: defender_status.realtime_protection != "enabled"
+        msg: "Windows Defender Real-Time Protection is {{ defender_realtime_status.stdout }}."
 
-    - name: Check Scheduled Scans
-      win_defender_scan:
-        scan_type: full
-        state: present
-      register: scan_status
+    - name: Check if the scheduled daily full scan task exists
+      win_shell: |
+        try {
+          $task = Get-ScheduledTask -TaskName "DailyWindowsDefenderScan" -ErrorAction Stop
+          $task | Select-object TaskName
+        } catch {
+          Write-Output "TaskNotFound"
+        }
+      register: scheduled_task_status
+      changed_when: false
 
-    - name: Display Scheduled Scan Status
+    - name: Display scheduled task status
       debug:
-        msg: "Scheduled Scans are ENABLED."
-      when: scan_status.state == "present"
-
-    - name: Display Scheduled Scan Status
-      debug:
-        msg: "Scheduled Scans are DISABLED."
-      when: scan_status.state != "present"
+        msg: >
+          {% if scheduled_task_status.stdout == "TaskNotFound" %}
+            The scheduled task 'DailyWindowsDefenderScan' exists.
+          {% else %}
+            The scheduled task 'DailyWindowsDefenderScan' exists
+          {% endif %}
 

@@ -5,21 +5,29 @@
   become_method: runas
   become_user: SYSTEM
   tasks:
-
-    - name: Get WiFi adapter name
+    - name: Get WiFi adapter name using Get-WmiObject
       win_shell: |
-        Get-NetAdapter -InterfaceDescription "*Wi-Fi*" | Select-Object -ExpandProperty Name
+        Get-WmiObject Win32_NetworkAdapter | Where-Object { $_.NetConnectionID -like "*Wi-Fi*" } | Select-Object -ExpandProperty NetConnectionID
       register: wifi_adapter_name
+      changed_when: false
+
+    - name: Extract WiFi adapter_name
+      set_fact:
+        wifi_adapter_cleaned: "{{ wifi_adapter_name.stdout.splitlines()[0] | trim }}"
+
+    - name: Display WiFi adapter output for debugging
+      debug:
+        msg: "Cleaned Adapter Name: {{ wifi_adapter_cleaned }}"
 
     - name: Enable WiFi card
       win_shell: |
-        Enable-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" -Confirm:$false
+        Enable-NetAdapter -Name "{{ wifi_adapter_cleaned }}" -Confirm:$false
       when: wifi_adapter_name.stdout != ""
       register: enable_wifi_result
 
     - name: Confirm WiFi card is enabled
       win_shell: |
-        Get-NetAdapter -Name "{{ wifi_adapter_name.stdout }}" | Select-Object -ExpandProperty Status
+        Get-NetAdapter -Name "{{ wifi_adapter_cleaned }}" | Select-Object -ExpandProperty Status
       register: wifi_status
       when: wifi_adapter_name.stdout != ""
 

@@ -1,0 +1,33 @@
+---
+- name: Toggle and Check Windows Firewall Status
+  hosts: all
+  become: yes
+  become_method: runas
+  become_user: SYSTEM
+  tasks:
+    - name: Disable Windows Firewall for all profiles using PowerShell
+      win_shell: |
+        Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled False
+
+    - name: Check if Windows Firewall is disabled for all profiles using PowerShell
+      win_shell: |
+        (Get-NetFirewallProfile -Profile Domain,Private,Public).Enabled
+      register: firewall_status
+
+    - name: Print firewall_status for debugging
+      debug:
+        var: firewall_status
+
+    - name: Enable Windows Firewall for all profiles using PowerShell
+      win_shell: |
+        Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True
+
+    - name: Check if Windows Firewall is enabled for all profiles using PowerShell
+      win_shell: |
+        (Get-NetFirewallProfile -Profile Domain,Private,Public).Enabled
+      register: firewall_status_after_enable
+
+    - name: Print firewall_status_after_enable for debugging
+      debug:
+        var: firewall_status_after_enable
+
