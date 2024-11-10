@@ -12,7 +12,18 @@
       win_shell: |
         reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "NoDriveTypeAutoRun" /t REG_DWORD /d 91 /f
 
+    - name: Detect system language
+      win_shell: |
+        [System.Globalization.CultureInfo]::InstalledUICulture.Name
+      register: lang
+
+    - name: Set audit category based on system language
+      set_fact:
+        audit_category: "{{ 'Other System Events' if lang.stdout.startswith('en') else 'Autres événements système' }}"
+
     - name: Disable Auditing for AutoRun/AutoPlay Attempts
       win_shell: |
-        auditpol /set /subcategory:"Other System Events" /success:disable /failure:disable
+        auditpol /set /subcategory:"{{ audit_category }}" /success:disable /failure:disable
+      args:
+        executable: PowerShell
 
