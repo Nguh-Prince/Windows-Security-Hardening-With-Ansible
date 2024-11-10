@@ -29,3 +29,7 @@
       debug:
         msg: "WiFi adapter status: {{ wifi_status.stdout if wifi_adapter_name.stdout != '' else 'No WiFi adapter found' }}"
 
+    - name: Fail if WiFi is enabled
+      fail:
+        msg: "Security measure absent: WiFi is enabled"
+      when: wifi_adapter_name.stdout != ''

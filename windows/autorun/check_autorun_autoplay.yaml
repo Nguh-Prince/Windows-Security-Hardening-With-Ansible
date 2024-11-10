@@ -42,3 +42,11 @@
         msg: "AutoPlay is DISABLED."
       when: '"0x91" in autoplay_status.stdout or "0xff" in autoplay_status.stdout'
 
+    - name: "Fail if Autorun or Autoplay is Enabled"
+      fail:
+        msg: "Security measure failed: either autorun or autoplay is enabled"
+      when: '"0x91" not in autoplay_status.stdout and "0xff" not in autoplay_status.stdout or "0x0" in autorun_status.stdout'
+    
+    - name: Check completed successfully
+      debug:
+        msg: "All security measures are in place."

@@ -25,6 +25,10 @@
       when: wifi_adapter_name.stdout != ""
       register: enable_wifi_result
 
+    - name: Pause for 10 seconds to allow network stabilization
+      pause:
+        seconds: 10
+
     - name: Confirm WiFi card is enabled
       win_shell: |
         Get-NetAdapter -Name "{{ wifi_adapter_cleaned }}" | Select-Object -ExpandProperty Status

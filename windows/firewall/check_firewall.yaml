@@ -24,3 +24,11 @@
         msg: "Windows Firewall is completely disabled for all profiles."
       when: firewall_status.stdout.strip() == 'False False False'
 
+    - name: Fail if firewall is disabled
+      fail:
+        msg: "Security measure not met: firewall is not enabled for all profiles"
+      when: firewall_status.stdout.strip() != 'True True True'
+
+    - name: Check completed successfully
+      debug:
+        msg: "All security measures are in place."

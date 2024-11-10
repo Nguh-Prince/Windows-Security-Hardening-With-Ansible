@@ -21,4 +21,12 @@
       debug:
         msg: "USB Storage is ENABLED."
       when: '"0x4" not in usb_start.stdout'
-
+    
+    - name: Fail if USB Storage is not disabled
+      fail:
+        msg: "Security measure failed: USB Storage is ENABLED."
+      when: '"0x4" not in usb_start.stdout'
+    
+    - name: Check completed successfully
+      debug:
+        msg: "All security measures are in place."

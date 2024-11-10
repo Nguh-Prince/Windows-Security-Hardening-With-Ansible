@@ -45,3 +45,7 @@
             The scheduled task 'DailyWindowsDefenderScan' exists
           {% endif %}
 
+    - name: Fail if Windows Defender is disabled
+      fail:
+        msg: "Security measure failed: Windows Defender is disabled"
+      when: defender_realtime_status.stdout.strip() == 'False'

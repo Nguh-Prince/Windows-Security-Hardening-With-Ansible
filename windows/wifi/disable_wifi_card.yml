@@ -16,10 +16,6 @@
       set_fact:
         wifi_adapter_cleaned: "{{ wifi_adapter_name.stdout.splitlines()[0] | trim }}"
 
-    - name: Display WiFi adapter output for debugging
-      debug:
-        var: "Cleaned Adapter name: {{ wifi_adapter_cleaned }}"
-
     - name: Disable WiFi card
       win_shell: |
         Disable-NetAdapter -Name "{{ wifi_adapter_cleaned }}" -Confirm:$false
